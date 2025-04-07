@@ -57,8 +57,6 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
     Output only the pure JSON. 
     You will need to make up your own substitutions, demonstration, and helpfulTip texts based on what you think would work. 
     Every imageURL field should match the text provided. 
-    For serving size, use what's provided in the input. 
-    If nothing is provided, make up a serving size based on what you think it would be with the ingredients provided.
     For any fractions, use the format "1/2" instead of "½". It is critical that the fractions are in this format.
     For example, "1/2 cup" instead of "½ cup" and "3 1/4 cups" instead of "3 ¼ cups".`;
 

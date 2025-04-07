@@ -1,36 +1,29 @@
 "use client";
 import { useState } from "react";
 import styles from "./LandingPage.module.css";
-import recipeData from "../../demo_recipes.json";
+// import recipeData from "../../demo_recipes.json";
 import AddRecipeModal from "./AddRecipeModal";
 
 interface LandingPageProps {
+  recipeNames: string[]; // Accept list of names as props
   onSelectRecipe: (recipeName: string) => void;
 }
 
-interface DemoRecipe {
-  name: string;
-  ingredients: unknown;
-  steps: unknown;
-}
+// Remove DemoRecipe, DemoRecipes interfaces if no longer needed here
+// Remove transformData function if no longer needed here
 
-interface DemoRecipes {
-  recipes: DemoRecipe[];
-}
-
-interface Recipe {
-  recipeName: string;
-}
-
-const transformData = (json: DemoRecipes): Recipe[] => {
-  return json.recipes.map((r) => ({
-    recipeName: r.name,
-  }));
-};
-
-export default function LandingPage({ onSelectRecipe }: LandingPageProps) {
-  const recipes = transformData(recipeData as DemoRecipes);
+export default function LandingPage({ recipeNames, onSelectRecipe }: LandingPageProps) {
   const [showModal, setShowModal] = useState(false);
+
+  // Function to handle successful recipe addition (optional)
+  const handleRecipeAdded = () => {
+      setShowModal(false);
+      // Potentially trigger a data refresh on the parent page
+      // For now, just close the modal. A full refresh might be needed
+      // Or the parent page could refetch data when the modal closes.
+      // Consider adding an `onRecipeAdded` prop callback if needed.
+       window.location.reload(); // Simple way to refresh data, but not ideal UX
+  };
 
   return (
     <div className={styles.container}>
@@ -41,25 +34,34 @@ export default function LandingPage({ onSelectRecipe }: LandingPageProps) {
         <span>Upload custom recipe</span>
         <span className={styles.arrow}>↑</span>
       </div>
-      {showModal && <AddRecipeModal onClose={() => setShowModal(false)} />}
+      {/* Pass the callback to the modal */}
+      {showModal && <AddRecipeModal onClose={handleRecipeAdded} />}
       <div className={styles.content}>
-        {recipes.map((recipe) => {
-          const formattedRecipe = recipe.recipeName.toLowerCase().replace(/\s+/g, "_");
+        {recipeNames.map((recipeName) => { // Use recipeNames from props
+          const formattedRecipe = recipeName.toLowerCase().replace(/\s+/g, "_");
+          // TODO: Image paths will need handling if they are part of the dynamic data
+          // or stored elsewhere. For now, it might break for new recipes.
+          const imageUrl = `./images/${formattedRecipe}/cover_photo.jpg`;
+
           return (
             <button
-              key={recipe.recipeName}
+              key={recipeName}
               className={styles.button}
-              onClick={() => onSelectRecipe(recipe.recipeName)}
+              onClick={() => onSelectRecipe(recipeName)}
             >
               <div className={styles.imageWrapper}>
                 <img
-                // NOT GONNA WORK ATM FOR NEW RECIPES BECAUSE WE DONT HAVE COVER IMAGE FOR THEM
-                  src={`./images/${formattedRecipe}/cover_photo.jpg`}
-                  alt={recipe.recipeName}
+                  src={imageUrl}
+                  alt={recipeName}
                   className={styles.recipeImage}
+                  onError={(e) => { // Basic fallback if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.src = './images/placeholder.jpg'; // Provide a placeholder image path
+                      target.alt = `${recipeName} (Image not found)`;
+                   }}
                 />
               </div>
-              <span>{recipe.recipeName}</span>
+              <span>{recipeName}</span>
             </button>
           );
         })}

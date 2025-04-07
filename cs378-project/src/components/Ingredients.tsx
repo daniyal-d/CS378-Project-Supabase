@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import styles from "./Ingredients.module.css";
-import recipeData from "../../demo_recipes.json";
 import { FaRegStar, FaStar } from "react-icons/fa";
 
 // Helper function to format the adjusted number
@@ -106,21 +105,21 @@ const adjustQuantity = (quantity: string | undefined, ratio: number): string => 
     return result; // Don't trim here, preserve internal spaces like "1 1/2 cups"
 };
 
+interface IngredientSubstitution {
+  substitution: string;
+}
+
 interface DemoIngredient {
   item: string;
   quantity?: string;
-  substitutions?: { substitution: string }[];
+  substitutions?: IngredientSubstitution[];
 }
 
-interface DemoRecipe {
+interface Recipe {
   name: string;
   serving_size: number;
   ingredients: DemoIngredient[];
-  steps: unknown[];
-}
-
-interface DemoRecipes {
-  recipes: DemoRecipe[];
+  steps?: unknown[];
 }
 
 interface IngredientAlternative {
@@ -141,52 +140,13 @@ interface Ingredient {
   showAlternatives?: boolean;
 }
 
-interface TransformedData {
-  ingredients: Ingredient[];
-  servingSize: number;
-}
-
 interface IngredientsProps {
   onContinueToInstructions: () => void;
   onBack: () => void;
-  selected: string;
+  recipe: Recipe;
 }
 
-const transformData = (json: DemoRecipes, selectedRecipe: string): TransformedData | null => {
-  const recipe = json.recipes.find((r) => r.name === selectedRecipe);
-  if (!recipe) return null;
-
-  const baseIngredients = recipe.ingredients.map((item) => {
-      const baseAmount = item.quantity ? `(${item.quantity})` : "";
-      return {
-          id: item.item.toLowerCase().replace(/\s/g, "-"),
-          name: item.item,
-          baseAmount: baseAmount,
-          currentAmount: baseAmount,
-          selected: false,
-          alternatives: item.substitutions
-              ? item.substitutions.map((sub) => {
-                  const altBaseAmount = item.quantity ? `(${item.quantity})` : "";
-                  return {
-                      id: sub.substitution.toLowerCase().replace(/\s/g, "-"),
-                      name: sub.substitution,
-                      baseAmount: altBaseAmount,
-                      currentAmount: altBaseAmount,
-                      selected: false,
-                  };
-              })
-              : [],
-          showAlternatives: false,
-      };
-  });
-
-  return {
-    ingredients: baseIngredients,
-    servingSize: recipe.serving_size || 1,
-  };
-};
-
-const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onBack, selected }) => {
+const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onBack, recipe }) => {
   const [baseIngredients, setBaseIngredients] = useState<Ingredient[]>([]);
   const [currentIngredients, setCurrentIngredients] = useState<Ingredient[]>([]);
   const [baseServingSize, setBaseServingSize] = useState<number>(1);
@@ -195,63 +155,91 @@ const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onB
 
   const [showSettings, setShowSettings] = useState(false);
   const [isFavorite, setIsFavorite] = useState<boolean>(() => {
-    const stored = localStorage.getItem(`isFavorite_${selected}`);
-    return stored ? JSON.parse(stored) : false;
+    if (typeof window !== 'undefined' && recipe?.name) {
+        const stored = localStorage.getItem(`isFavorite_${recipe.name}`);
+        return stored ? JSON.parse(stored) : false;
+    }
+    return false;
   });
 
   useEffect(() => {
-    const data = transformData(recipeData as DemoRecipes, selected);
-    if (data) {
-        setBaseIngredients(data.ingredients);
-        setCurrentIngredients(data.ingredients);
-        setBaseServingSize(data.servingSize);
-        setCurrentServingSize(data.servingSize);
-        setServingInput(data.servingSize.toString());
+    if (!recipe) return;
+
+    const initialIngredients = recipe.ingredients.map((item) => {
+        const baseAmount = item.quantity ? `(${item.quantity})` : "";
+        return {
+            id: item.item.toLowerCase().replace(/\s/g, "-"),
+            name: item.item,
+            baseAmount: baseAmount,
+            currentAmount: baseAmount,
+            selected: false,
+            alternatives: item.substitutions
+                ? item.substitutions.map((sub) => {
+                    const altBaseAmount = item.quantity ? `(${item.quantity})` : "";
+                    return {
+                        id: sub.substitution.toLowerCase().replace(/\s/g, "-"),
+                        name: sub.substitution,
+                        baseAmount: altBaseAmount,
+                        currentAmount: altBaseAmount,
+                        selected: false,
+                    };
+                })
+                : [],
+            showAlternatives: false,
+        };
+    });
+
+    setBaseIngredients(initialIngredients);
+    setCurrentIngredients(initialIngredients);
+    const recipeServingSize = recipe.serving_size || 1;
+    setBaseServingSize(recipeServingSize);
+    setCurrentServingSize(recipeServingSize);
+    setServingInput(recipeServingSize.toString());
+
+    if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(`isFavorite_${recipe.name}`);
+        setIsFavorite(stored ? JSON.parse(stored) : false);
     }
-  }, [selected]);
+
+  }, [recipe]);
 
   useEffect(() => {
-    if (baseIngredients.length === 0) return; // Wait for ingredients to load
+    if (baseIngredients.length === 0 || !recipe) return;
 
-    // Use 1 as minimum divisor to prevent division by zero errors if base is 0
     const safeBaseServingSize = baseServingSize === 0 ? 1 : baseServingSize;
     const ratio = currentServingSize / safeBaseServingSize;
 
     const stripParens = (s: string) => s.startsWith('(') && s.endsWith(')') ? s.slice(1, -1) : s;
-    // Don't add parens if the result is empty or just whitespace
     const addParens = (s: string) => s && s.trim() ? `(${s.trim()})` : "";
 
-    setCurrentIngredients(prevIngredients =>
+    setCurrentIngredients(prevCurrentIngredients =>
       baseIngredients.map(baseIng => {
-          // Find corresponding previous ingredient to preserve selection/dropdown state
-          const prevIng = prevIngredients.find(pi => pi.id === baseIng.id) || baseIng;
-          // Strip parens, adjust, add parens back
+          const prevIngState = prevCurrentIngredients.find(pi => pi.id === baseIng.id);
+
           const strippedBaseAmount = stripParens(baseIng.baseAmount);
           const adjustedAmountStr = adjustQuantity(strippedBaseAmount, ratio);
           const finalAmount = addParens(adjustedAmountStr);
 
           return {
-            ...prevIng, // Keep existing states like 'selected', 'showAlternatives'
-            name: baseIng.name, // Ensure name is from base
-            baseAmount: baseIng.baseAmount, // Keep original base amount
-            currentAmount: finalAmount, // Set the new adjusted amount
+            ...baseIng,
+            selected: prevIngState?.selected ?? false,
+            showAlternatives: prevIngState?.showAlternatives ?? false,
+            currentAmount: finalAmount,
             alternatives: baseIng.alternatives?.map(baseAlt => {
-                const prevAlt = prevIng.alternatives?.find(pa => pa.id === baseAlt.id) || baseAlt;
-                 // Strip parens, adjust, add parens back for alternatives
+                const prevAltState = prevIngState?.alternatives?.find(pa => pa.id === baseAlt.id);
                 const strippedAltBaseAmount = stripParens(baseAlt.baseAmount);
                 const adjustedAltAmountStr = adjustQuantity(strippedAltBaseAmount, ratio);
                 const finalAltAmount = addParens(adjustedAltAmountStr);
                 return {
-                    ...prevAlt, // Keep existing states
-                    name: baseAlt.name,
-                    baseAmount: baseAlt.baseAmount,
+                    ...baseAlt,
+                    selected: prevAltState?.selected ?? false,
                     currentAmount: finalAltAmount,
                 };
             }),
           };
       })
     );
-  }, [currentServingSize, baseServingSize, baseIngredients]); // Dependencies
+  }, [currentServingSize, baseServingSize, baseIngredients, recipe]);
 
   const toggleIngredient = (id: string) => {
     setCurrentIngredients((prev) =>
@@ -301,7 +289,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onB
       if (!isNaN(newSize) && newSize >= 0) {
           setCurrentServingSize(newSize);
       } else if (inputValue === "" || isNaN(newSize)) {
-          setCurrentServingSize(0);
+           setCurrentServingSize(0);
       }
   };
 
@@ -311,17 +299,41 @@ const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onB
       setServingInput(newNumericSize.toString());
   };
 
+  const handleBlurServingInput = (event: React.FocusEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+       if (value === "" || isNaN(parseInt(value, 10)) || parseInt(value, 10) < 0) {
+           setCurrentServingSize(baseServingSize);
+           setServingInput(baseServingSize.toString());
+       } else {
+           const numValue = parseInt(value, 10);
+            if (!isNaN(numValue)) {
+               setServingInput(numValue.toString());
+               setCurrentServingSize(numValue);
+           } else {
+                setCurrentServingSize(baseServingSize);
+                setServingInput(baseServingSize.toString());
+           }
+       }
+   };
+
   const toggleFavorite = () => {
+    if (!recipe?.name) return;
     const newFavorite = !isFavorite;
     setIsFavorite(newFavorite);
-    localStorage.setItem(`isFavorite_${selected}`, JSON.stringify(newFavorite));
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(`isFavorite_${recipe.name}`, JSON.stringify(newFavorite));
+    }
   };
+
+  if (!recipe) {
+      return <div>Loading ingredients...</div>;
+  }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <button className={styles.backButton} onClick={onBack}>
-          ← Back to {selected}
+          ← Back to {recipe.name}
         </button>
         <button className={styles.settingsButton} onClick={() => setShowSettings(true)}>
           <svg viewBox="0 0 24 24" width="24" height="24" className={styles.settingsIcon}>
@@ -340,18 +352,8 @@ const Ingredients: React.FC<IngredientsProps> = ({ onContinueToInstructions, onB
               min="0"
               value={servingInput}
               onChange={handleServingChange}
+              onBlur={handleBlurServingInput}
               className={styles.servingInput}
-              onBlur={(e) => {
-                if (e.target.value !== "0" && e.target.value.startsWith("0")) {
-                    const correctedValue = parseInt(e.target.value, 10);
-                    if (!isNaN(correctedValue)) {
-                        setServingInput(correctedValue.toString());
-                    }
-                } else if (e.target.value === "") {
-                    setServingInput("0");
-                    setCurrentServingSize(0);
-                }
-              }}
            />
           <button onClick={() => adjustServingSize(1)}>+</button>
       </div>
