@@ -16,7 +16,7 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
   const processWithChatGPT = async (scrapedContent: string) => {
     // NOTE: In production, API keys should be stored securely on the server-side
     const openai = new OpenAI({
-      apiKey: "HIDDEN",
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
       dangerouslyAllowBrowser: true // Required for client-side use
     });
 
@@ -113,7 +113,7 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
     setLoading(true);
     
     try {
-      const app = new FirecrawlApp({apiKey: "HIDDEN"});
+      const app = new FirecrawlApp({apiKey: process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY});
       
       // Make API call to scrape the URL
       const scrapeResult = await app.scrapeUrl(url, { formats: ['markdown'] }) as ScrapeResponse;
