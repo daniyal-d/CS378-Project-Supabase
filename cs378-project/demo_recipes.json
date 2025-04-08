@@ -3,6 +3,7 @@
     {
       "name": "Spaghetti Carbonara",
       "serving_size": 4,
+      "coverImg": "/images/spaghetti_carbonara/cover_photo.jpg",
       "ingredients": [
         {
           "item": "Spaghetti",
@@ -122,6 +123,7 @@
     {
       "name": "Chocolate Chip Cookies",
       "serving_size": 12,
+      "coverImg": "/images/chocolate_chip_cookies/cover_photo.jpg",
       "ingredients": [
         {
           "item": "All-purpose flour",
@@ -273,6 +275,7 @@
     {
       "name": "Hummingbird Muffins",
       "serving_size": 12,
+      "coverImg": "/images/hummingbird_muffins/cover_photo.jpg",
       "ingredients": [
         {
           "item": "All-purpose flour",
