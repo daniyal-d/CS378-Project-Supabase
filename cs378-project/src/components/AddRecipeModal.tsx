@@ -44,8 +44,7 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
               "description": "<step description>",
               "imageUrl": "/images/spaghetti_carbonara/1.jpg",
               "timerDuration": <duration in minutes>,
-              "demonstration": "<demonstration text>",
-              "helpfulTip": "<helpful tip text>"
+              "demonstration": "<demonstration embedding url>",
             },
             ...
           ]
@@ -55,7 +54,8 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
     Provide only the JSON output. No other text should be included. 
     Your output will be directly added to a JSON file, therefore do not wrap it in quotation marks or any other text. 
     Output only the pure JSON. 
-    You will need to make up your own substitutions, demonstration, and helpfulTip texts based on what you think would work. 
+    You will need to make up your own substitution texts based on what you think would work. 
+    You will need to find a single YouTube video under 1 minute for each demonstration based on what you think is the one most challenging part from the description. The video must be relevant to the task in the description. It is critical that the video is available and that you find the entire embed video URL, and not the watch one. Demonstration should only be the embed video URL.
     Every imageURL field should match the text provided. 
     For any fractions, use the format "1/2" instead of "½". It is critical that the fractions are in this format.
     For example, "1/2 cup" instead of "½ cup" and "3 1/4 cups" instead of "3 ¼ cups".`;
