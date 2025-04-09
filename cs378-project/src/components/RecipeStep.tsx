@@ -13,7 +13,6 @@ interface RecipeStepProps {
   imageUrl: string;
   timerDuration?: number;
   demonstration: string;
-  helpfulTip: string;
   onNext?: () => void;
   onPrevious?: () => void;
   allStepTitles?: string[];
@@ -40,7 +39,6 @@ const RecipeStep: React.FC<RecipeStepProps> = ({
   imageUrl,
   //timerDuration = 0,
   demonstration,
-  helpfulTip,
   onNext,
   onPrevious,
   allStepTitles = [],
@@ -226,13 +224,21 @@ const RecipeStep: React.FC<RecipeStepProps> = ({
           <div className={`${styles.cardFace} ${styles.cardBack}`} onClick={handleFlip}>
             <h2 className={styles.title}>Demo &amp; Tips</h2>
             <div className={styles.demoSection}>
-              <h3>Demonstration</h3>
-              <p>{demonstration}</p>
+            <h3>Video Demonstration</h3>
+            <div className={styles.videoWrapper}>
+            <iframe 
+              width="560" 
+              height="315" 
+              src="https://www.youtube.com/embed/-wSa5Q332vo?si=N_j2lSLWElL_Adpd" 
+              title="YouTube video player" 
+              //frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              //referrerpolicy="strict-origin-when-cross-origin" 
+              allowFullScreen
+              >
+            </iframe>
             </div>
-            <div className={styles.tipsSection}>
-              <h3>Helpful Tips</h3>
-              <p>{helpfulTip}</p>
-            </div>
+          </div>
           </div>
         </div>
       </div>
