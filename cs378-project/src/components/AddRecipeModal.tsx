@@ -3,6 +3,8 @@ import { useState } from "react";
 import styles from "./AddRecipeModal.module.css";
 import FirecrawlApp, { ScrapeResponse } from '@mendable/firecrawl-js';
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 interface AddRecipeModalProps {
   onClose: () => void;
@@ -55,8 +57,7 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
     Your output will be directly added to a JSON file, therefore do not wrap it in quotation marks or any other text. 
     Output only the pure JSON. 
     You will need to make up your own substitution texts based on what you think would work. 
-    You will need to find a single YouTube video under 1 minute for each demonstration based on what you think is the one most challenging part from the description. The video must be relevant to the task in the description. It is critical that the video is available and that you find the entire embed video URL, and not the watch one. Demonstration should only be the embed video URL.
-    Every imageURL field should match the text provided. 
+    Leave the demonstration field blank for now.
     For any fractions, use the format "1/2" instead of "½". It is critical that the fractions are in this format.
     For example, "1/2 cup" instead of "½ cup" and "3 1/4 cups" instead of "3 ¼ cups".`;
 
@@ -80,6 +81,38 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
       throw error;
     }
   };
+
+  async function callGemini(recipeJSON: string) {
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+  
+    const chat = model.startChat({
+      history: [
+        {
+          role: "user",
+          parts: [{ text: "You are a helpful assistant that extracts recipe information." }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+      }
+    });
+  
+    const prompt = `You will need to find a single YouTube video under 1 minute for each demonstration based on 
+    what you think is the one most challenging part from the description. The video must be relevant to the task 
+    in the title or description. It is critical that the video is available and that you find the entire embed video URL, 
+    and not the watch one. Demonstration should only be the embed video URL. Maintain JSON formatting and all data. The
+    only thing you should change is demonstration: should be your URL.`;
+
+    const result = await chat.sendMessage([
+      { text: prompt },
+      { text: recipeJSON }
+    ]);
+  
+    const response = await result.response;
+    return response.text();
+  }
+  
 
   const saveRecipeToFile = async (recipeJson: string) => {
     try {
@@ -131,8 +164,16 @@ export default function AddRecipeModal({ onClose }: AddRecipeModalProps) {
         const recipeJson = await processWithChatGPT(scrapeResult.markdown || '');
         
         if (recipeJson) {
-          setMessage("Recipe processed! Saving to file...");
-          await saveRecipeToFile(recipeJson);
+          setMessage("Adding video tips...")
+          const withURL = await callGemini(recipeJson);
+          if(withURL) {
+            setMessage("Video links added. Saving to file...")
+            await saveRecipeToFile(withURL);
+          }
+          else {
+            setMessage("Videos couldn't be added womp womp! Saving to file...");
+            await saveRecipeToFile(recipeJson);
+          }
           setMessage("Recipe saved successfully!");
         } else {
           setMessage("Failed to process recipe. Please try again with a different URL.");

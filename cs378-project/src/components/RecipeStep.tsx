@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./RecipeStep.module.css";
 import { FaRegStar, FaStar } from "react-icons/fa";
+import FirecrawlApp, { ScrapeResponse } from '@mendable/firecrawl-js';
 
 interface RecipeStepProps {
   // Existing props
@@ -225,6 +226,7 @@ const RecipeStep: React.FC<RecipeStepProps> = ({
             <h2 className={styles.title}>Demo &amp; Tips</h2>
             <div className={styles.demoSection}>
             <h3>Video Demonstration</h3>
+            {/* <p>{demonstration}</p> */}
             <div className={styles.videoWrapper}>
             <iframe 
               width="560" 
