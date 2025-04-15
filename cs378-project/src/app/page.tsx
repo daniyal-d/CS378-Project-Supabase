@@ -30,11 +30,17 @@ interface RecipeStepData {
 interface Recipe {
   name: string;
   serving_size: number;
+  coverImage: string;
   ingredients: Ingredient[];
   steps: RecipeStepData[];
 }
 interface RecipeFileData {
   recipes: Recipe[];
+}
+
+interface HomeRecipe {
+  recipeName: string;
+  coverImage: string;
 }
 
 export default function Home() {
@@ -46,6 +52,7 @@ export default function Home() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [hasStartedRecipe, setHasStartedRecipe] = useState(false);
   const [selectedRecipeName, setSelectedRecipeName] = useState<string>("");
+  const [selectedCoverImage, setSelectedCoverImage] = useState<string>("")
 
   // Fetch recipe data from the API endpoint
   useEffect(() => {
@@ -110,8 +117,9 @@ export default function Home() {
     setCurrentStepIndex(stepNumber - 1);
   };
 
-  const handleSelectRecipe = (recipeName: string) => {
+  const handleSelectRecipe = (recipeName: string, coverImage: string) => {
     setSelectedRecipeName(recipeName);
+    setSelectedCoverImage(coverImage);
     setHasStartedRecipe(false);
     setCurrentStepIndex(0);
     setCurrentView("start");
@@ -195,9 +203,12 @@ export default function Home() {
     <div className={styles.container}>
       {currentView === "landing" && (
         <LandingPage
-          // Pass only the recipe names needed for the landing page
-          recipeNames={allRecipeData.recipes.map(r => r.name)}
-          onSelectRecipe={handleSelectRecipe}
+        // Pass an array of objects with recipeName and coverImage
+          recipes={allRecipeData.recipes.map(r => ({
+            recipeName: r.name,
+            coverImage: r.coverImage,
+          }))}
+          onSelectRecipe={handleSelectRecipe} // Make sure this is passed
         />
       )}
       {currentView === "start" && selectedRecipe && ( // Ensure recipe is selected
@@ -207,6 +218,7 @@ export default function Home() {
           onBack={goToLanding}
           hasStarted={hasStartedRecipe}
           selected={selectedRecipeName} // Pass name
+          coverImage={selectedCoverImage}
         />
       )}
       {currentView === "ingredients" && selectedRecipe && ( // Ensure recipe is selected

@@ -4,15 +4,21 @@ import styles from "./LandingPage.module.css";
 // import recipeData from "../../demo_recipes.json";
 import AddRecipeModal from "./AddRecipeModal";
 
-interface LandingPageProps {
-  recipeNames: string[]; // Accept list of names as props
-  onSelectRecipe: (recipeName: string) => void;
+interface HomeRecipe {
+  recipeName: string;
+  coverImage: string;
 }
+
+interface LandingPageProps {
+  recipes: HomeRecipe[]; 
+  onSelectRecipe: (recipeName: string, coverImage:string) => void;
+}
+
 
 // Remove DemoRecipe, DemoRecipes interfaces if no longer needed here
 // Remove transformData function if no longer needed here
 
-export default function LandingPage({ recipeNames, onSelectRecipe }: LandingPageProps) {
+export default function LandingPage({ recipes, onSelectRecipe }: LandingPageProps) {
   const [showModal, setShowModal] = useState(false);
 
   // Function to handle successful recipe addition (optional)
@@ -34,37 +40,30 @@ export default function LandingPage({ recipeNames, onSelectRecipe }: LandingPage
         <span>Upload custom recipe</span>
         <span className={styles.arrow}>↑</span>
       </div>
-      {/* Pass the callback to the modal */}
       {showModal && <AddRecipeModal onClose={handleRecipeAdded} />}
+      
       <div className={styles.content}>
-        {recipeNames.map((recipeName) => { // Use recipeNames from props
-          const formattedRecipe = recipeName.toLowerCase().replace(/\s+/g, "_");
-          // TODO: Image paths will need handling if they are part of the dynamic data
-          // or stored elsewhere. For now, it might break for new recipes.
-          const imageUrl = `./images/${formattedRecipe}/cover_photo.jpg`;
-
-          return (
-            <button
-              key={recipeName}
-              className={styles.button}
-              onClick={() => onSelectRecipe(recipeName)}
-            >
-              <div className={styles.imageWrapper}>
-                <img
-                  src={imageUrl}
-                  alt={recipeName}
-                  className={styles.recipeImage}
-                  onError={(e) => { // Basic fallback if image fails
-                      const target = e.target as HTMLImageElement;
-                      target.src = './images/placeholder.jpg'; // Provide a placeholder image path
-                      target.alt = `${recipeName} (Image not found)`;
-                   }}
-                />
-              </div>
-              <span>{recipeName}</span>
-            </button>
-          );
-        })}
+        {recipes.map(({ recipeName, coverImage }) => (
+          <button
+            key={recipeName}
+            className={styles.button}
+            onClick={() => onSelectRecipe(recipeName, coverImage)}
+          >
+            <div className={styles.imageWrapper}>
+              <img
+                src={coverImage}
+                alt={recipeName}
+                className={styles.recipeImage}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/images/placeholder.jpg";
+                  target.alt = `${recipeName} (Image not found)`;
+                }}
+              />
+            </div>
+            <span>{recipeName}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ interface StartRecipeProps {
   hasStarted?: boolean; // Track if recipe has been started
   onBack: () => void; // New prop for handling back navigation
   selected: string; 
+  coverImage: string;
 }
 
 const StartRecipe: React.FC<StartRecipeProps> = ({ 
@@ -17,7 +18,8 @@ const StartRecipe: React.FC<StartRecipeProps> = ({
   onShowIngredients, 
   hasStarted = false,
   onBack,
-  selected
+  selected,
+  coverImage
 }) => {
   const formattedRecipe = selected.toLowerCase().replace(/\s+/g, "_");
 
@@ -31,7 +33,7 @@ const StartRecipe: React.FC<StartRecipeProps> = ({
       <h1 className={styles.title}>{selected}</h1>
       <div className={styles.imageWrapper}>
         <Image 
-          src={`./images/${formattedRecipe}/cover_photo.jpg`}
+          src={coverImage}
           alt={selected}
           width={200} 
           height={200} 
