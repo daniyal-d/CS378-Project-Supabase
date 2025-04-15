@@ -80,3 +80,14 @@
 .uploadPill {
     color: #000;
 }
+
+.recipeGenerator {
+    padding: 2%;
+    width: 234px;
+    background-color: #355e3b;
+    border-radius: 8px; 
+    border: none;
+    color: #f8f8f8;
+    margin-bottom: 10px;
+    margin-top: 10px
+}

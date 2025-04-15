@@ -37,8 +37,7 @@ export default function LandingPage({ recipes, onSelectRecipe }: LandingPageProp
         <h1 className={styles.title}>AL DENTE</h1>
       </div>
       <div className={styles.uploadPill} onClick={() => setShowModal(true)}>
-        <span>Upload custom recipe</span>
-        <span className={styles.arrow}>↑</span>
+        <button className={styles.recipeGenerator}>Upload custom recipe <span className={styles.arrow}>↑</span></button>
       </div>
       {showModal && <AddRecipeModal onClose={handleRecipeAdded} />}
       
