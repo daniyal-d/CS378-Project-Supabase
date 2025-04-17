@@ -38,11 +38,6 @@ interface RecipeFileData {
   recipes: Recipe[];
 }
 
-interface HomeRecipe {
-  recipeName: string;
-  coverImage: string;
-}
-
 export default function Home() {
   const [allRecipeData, setAllRecipeData] = useState<RecipeFileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

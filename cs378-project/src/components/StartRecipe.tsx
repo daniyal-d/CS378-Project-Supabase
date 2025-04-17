@@ -21,7 +21,6 @@ const StartRecipe: React.FC<StartRecipeProps> = ({
   selected,
   coverImage
 }) => {
-  const formattedRecipe = selected.toLowerCase().replace(/\s+/g, "_");
 
   return (
     <div className={styles.container}>
